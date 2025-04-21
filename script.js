@@ -3,7 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
     home: document.getElementById('home-page'),
     login: document.getElementById('login-page'),
     feed: document.getElementById('feed-page'),
-    profile: document.getElementById('profile-page')
+    profile: document.getElementById('profile-page'),
+    search: document.getElementById('search-page'),
+    anonSend: document.getElementById('anon-send-page')
   };
 
   const messagesContainer = pages.feed.querySelector('.messages');
@@ -160,65 +162,60 @@ document.addEventListener('DOMContentLoaded', () => {
     loadMessages();
   });
 
-  // โหลดข้อมูลอัตโนมัติถ้ามี user login ค้างไว้
+  // การโหลดข้อมูลอัตโนมัติเมื่อมีการล็อกอิน
   const currentUser = localStorage.getItem('currentUser');
   if (currentUser) {
     updateAvatarDisplay();
     showPage('feed');
     loadMessages();
   }
-});
-document.getElementById('go-search').addEventListener('click', () => {
-  showPage('search');
-});
 
-document.getElementById('back-home-from-search').addEventListener('click', () => {
-  showPage('home');
-});
+  // เปิดหน้าเสิร์ช
+  document.getElementById('go-search').addEventListener('click', () => {
+    showPage('search');
+  });
 
-document.getElementById('search-btn').addEventListener('click', () => {
-  const input = document.getElementById('search-username').value.trim();
-  if (!input) return alert('Please enter a username');
+  // การกลับไปหน้า Home จากหน้า Search
+  document.getElementById('back-home-from-search').addEventListener('click', () => {
+    showPage('home');
+  });
 
-  const users = JSON.parse(localStorage.getItem('users') || '{}');
-  if (!users[input]) {
-    alert('User not found');
-    return;
-  }
-
-  showAnonymousSendPage(input); // เรียกฟังก์ชันเดิม
-});
-
-function showAnonymousSendPage(targetUser) {
-  Object.values(pages).forEach(p => p.style.display = 'none');
-  document.getElementById('target-username').textContent = targetUser;
-  document.getElementById('anon-send-page').style.display = 'block';
-
-  document.getElementById('anon-send-btn').onclick = () => {
-    const msg = document.getElementById('anon-message').value.trim();
-    if (!msg) return alert('Message cannot be empty');
+  // การค้นหาผู้ใช้
+  document.getElementById('search-btn').addEventListener('click', () => {
+    const input = document.getElementById('search-username').value.trim();
+    if (!input) return alert('Please enter a username');
 
     const users = JSON.parse(localStorage.getItem('users') || '{}');
-    if (!users[targetUser]) {
-      alert('User does not exist!');
+    if (!users[input]) {
+      alert('User not found');
       return;
     }
 
-    users[targetUser].messages.unshift(msg);
-    localStorage.setItem('users', JSON.stringify(users));
+    showAnonymousSendPage(input); // เรียกฟังก์ชันแสดงหน้าส่งข้อความนิรนาม
+  });
 
-    alert('Message sent anonymously to ' + targetUser);
-    document.getElementById('anon-message').value = '';
-  };
-}
-function showAnonymousSendPage(user) {
-  document.getElementById('target-username').textContent = user;
-  document.getElementById('anon-send-page').style.display = 'block';
+  function showAnonymousSendPage(targetUser) {
+    // ซ่อนทุกหน้าก่อน
+    Object.values(pages).forEach(p => p.style.display = 'none');
+    document.getElementById('target-username').textContent = targetUser;
+    document.getElementById('anon-send-page').style.display = 'block';
 
-  document.getElementById('anon-send-btn').onclick = () => {
-    const msg = document.getElementById('anon-message').value.trim();
-    if (!msg) return;
-    sendAnonymousMessageTo(user, msg);
-    document.getElementById('anon-message').value = '';
-  };
-}
+    // การส่งข้อความนิรนาม
+    document.getElementById('anon-send-btn').onclick = () => {
+      const msg = document.getElementById('anon-message').value.trim();
+      if (!msg) return alert('Message cannot be empty');
+
+      const users = JSON.parse(localStorage.getItem('users') || '{}');
+      if (!users[targetUser]) {
+        alert('User does not exist!');
+        return;
+      }
+
+      users[targetUser].messages.unshift(msg);
+      localStorage.setItem('users', JSON.stringify(users));
+
+      alert('Message sent anonymously to ' + targetUser);
+      document.getElementById('anon-message').value = ''; // เคลียร์ข้อความ
+    };
+  }
+});
